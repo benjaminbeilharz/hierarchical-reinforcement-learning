@@ -1,0 +1,61 @@
+name: "RLTest"
+# This configuration serves the purpose of documenting and explaining the settings, *NOT* as an example for good hyperparamter settings.
+data: # specify your data here
+    env_name: "Acrobot-v1"
+    scenario: "ClassicControl"      # choices: "ClassicControl", "Atari", "HRL"
+training:                           # specify training details here
+   #load_agent: "best.ckpt"         # if given, load a pre-trained model from this checkpoint
+    warmstart: True                 # if True, load the agent checkpoint specified in `load_agent` above
+    reset_best_ckpt: False          # if True, reset the tracking of the best checkpoint and scores. Use for domain adaptation or fine-tuning with new metrics or dev data.
+    reset_scheduler: False          # if True, overwrite scheduler in loaded checkpoint with parameters specified in this config. Use for domain adaptation or fine-tuning.
+    reset_optimizer: False          # if True, overwrite optimizer in loaded checkpoint with parameters specified in this config. Use for domain adaptation or fine-tuning.
+    random_seed: 42                 # set this seed to make training deterministic
+    optimizer: "adam"               # choices: "sgd", "adam", "adadelta", "adagrad", "rmsprop", default is SGD
+    adam_betas: [0.9, 0.999]        # beta parameters for Adam. These are the defaults. Typically these are different for Transformer models.
+    learning_rate: 0.001            # initial learning rate, default: 3.0e-4
+    learning_rate_min: 0.0001       # stop learning when learning rate is reduced below this threshold, default: 1.0e-8
+    #learning_rate_factor: 1        # factor for Noam scheduler (used with Transformer)
+    #learning_rate_warmup: 4000     # warmup steps for Noam scheduler (used with Transformer)
+    clip_grad_val: 1.0              # clip the gradients to this value when they exceed it, optional
+    #clip_grad_norm: 1.0            # norm clipping instead of value clipping
+    weight_decay: 0.                # l2 regularization, default: 0
+    scheduling: "plateau"           # learning rate scheduling, optional, if not specified stays constant, options: "plateau", "exponential", "decaying", "noam" (for Transformer), "warmupexponentialdecay"
+    patience: 5                     # specific to plateau scheduler: wait for this many validations without improvement before decreasing the learning rate
+    decrease_factor: 0.5            # specific to plateau & exponential scheduler: decrease the learning rate by this factor
+    epochs: 10                      # train for this many epochs
+    episodes_per_epoch: 1000        # episodes per epoch
+    max_steps_per_episode: 650      # maximum trajectory length per episode
+    update_every_episodes: 1        # update after this many episodes
+    update_target_every: 3          # update the target networks after this many value net updates
+    validation_freq: 100            # validate after this many updates (number of mini-batches), default: 1000
+    num_valid_episodes: 10          # how many episodes to use for validation
+    logging_freq: 1                 # log the training progress after this many updates, default: 100
+    eval_metric: "reward"           # validation metric, default: "reward", other options: "loss"
+    early_stopping_metric: "loss"   # when a new high score on this metric is achieved, a checkpoint is written, when "eval_metric" (default) is maximized, when "loss" or "ppl" is minimized
+    model_dir: "models/acrobot"     # directory where models and validation results are stored, required
+    overwrite: True                 # overwrite existing model directory, default: False. Do not set to True unless for debugging!
+    shuffle: True                   # shuffle the training data, default: True
+    use_cuda: False                 # use CUDA for acceleration on GPU, required. Set to False when working on CPU.
+    keep_last_ckpts: 3              # keep this many of the latest checkpoints, if -1: all of them, default: 5
+    sampler: "multinomial"          # sampler used for selecting actions, can be greedy, epsilon-greedy, decaying-epsilon-greedy, multinomial
+    epsilon: 0.01                   # specific to epsilon-greedy sampler: the probability of sampling randomly from the distribution instead of taking the argmax
+    reward_discount_factor: 0.95    # factor for discounting future rewards
+    reward_whitening: True          # if true, normalises the per-agent rewards to have 0 mean and 1 variance
+    algorithm: "REINFORCE"          # "REINFORCE", "hrl-actor-critic", "actor-critic", "advantage-actor-critic"
+    # baseline: "average"
+    value_hidden_size: 128          # hidden dimension of value networks
+    value_num_layers: 2             # number of layers in value networks
+    use_target_nets: False          # specific to advantage-actor-critic: If True, uses target networks together with value networks. If False, uses only value networks
+    loss_during_episodes: True      # if True, calculate the loss during episodes instead of after, default: False
+    update_every_steps: 250         # only when setting `loss_during_episodes`= True. Must be > 2.
+    bootstrap_from_state_value: True # specific to advantage-actor-critic: If episode doesn't finish with last state, bootstrap reward from state value of the last observation
+testing:                            # specify which inference algorithm to use for testing (for validation it's always greedy decoding)
+    pass: 0
+    num_episodes: 3
+    max_steps_per_episode: 250
+    render: False                   # should only be True, if u have access to a monitor
+model:                              # specify your model architecture here
+    hidden_size: 128
+    nlayers: 2
+    encoder:
+        hidden_size: 128
